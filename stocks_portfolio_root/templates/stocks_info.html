@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block portfolio_info %}
+<!-- Таблица -->
+  	<section>
+  		<div class="container">
+  			<h1 class="text-3">Доступные инвестиционные портфели</h1>
+  			<table class="table table_one">
+			  <thead class="thead-dark">
+			    <tr>
+			      <th scope="col">Акция</th>
+			      <th scope="col">Сумма инвестиций</th>
+
+			    </tr>
+			  </thead>
+			  <tbody>
+			  {% for obj in stocks_list %}
+			    <tr>
+			      <td>{{ obj.company__short_name }}</td>
+			      <td>{{ obj.invested_amount }} {{ obj.currency__short_name }}</td>
+
+			    </tr>
+			  {% endfor %}
+			  </tbody>
+			</table>
+  		</div>
+  	</section>
+
+{% endblock %}
