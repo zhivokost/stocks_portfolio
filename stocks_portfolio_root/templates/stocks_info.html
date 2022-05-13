@@ -2,24 +2,37 @@
 
 {% load static %}
 
-{% block portfolio_info %}
+{% block content %}
 <!-- Таблица -->
+
   	<section>
   		<div class="container">
-  			<h1 class="text-3">Доступные инвестиционные портфели</h1>
+  			<h1 class="text-3">Акции компаний в инвест портфеле</h1>
   			<table class="table table_one">
 			  <thead class="thead-dark">
 			    <tr>
 			      <th scope="col">Акция</th>
+				  <th scope="col">Кол-во</th>
+				  <th scope="col">Цена покупки</th>
 			      <th scope="col">Сумма инвестиций</th>
+
+				  {% for json_col in stocks_list.0.company__fundamentals__financial_indicators.keys %}
+				    <th scope="col">{{ json_col }} </th>
+				  {% endfor %}
 
 			    </tr>
 			  </thead>
 			  <tbody>
-			  {% for obj in stocks_list %}
+			  {% for val in stocks_list %}
 			    <tr>
-			      <td>{{ obj.company__short_name }}</td>
-			      <td>{{ obj.invested_amount }} {{ obj.currency__short_name }}</td>
+			      <td>{{ val.company__short_name }}</td>
+				  <td>{{ val.stocks_count }}</td>
+				  <td>{{ val.buy_price }}</td>
+			      <td>{{ val.invested_amount }} {{ obj.currency__short_name }}</td>
+
+				  {% for json_val in val.company__fundamentals__financial_indicators.values %}
+				    <td>{{ json_val }}</td>
+				  {% endfor %}
 
 			    </tr>
 			  {% endfor %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+<!-- Таблица -->
+{{ companies_list }}
+  	<section>
+  		<div class="container">
+  			<h1 class="text-3">Список компаний</h1>
+  			<table class="table table_one">
+			  <thead class="thead-dark">
+			    <tr>
+			      <th scope="col">Компания</th>
+				  <th scope="col">Страна</th>
+				  <th scope="col">Отрасль</th>
+			      <th scope="col">Тикер акции</th>
+				  <th scope="col">Сайт компании</th>
+				  <th scope="col">Цена акции</th>
+
+				  {% for json_col in companies_list.0.fundamentals__financial_indicators.keys %}
+				    <th scope="col">{{ json_col }} </th>
+				  {% endfor %}
+
+			    </tr>
+			  </thead>
+			  <tbody>
+			  {% for val in companies_list %}
+			    <tr>
+			      <td>{{ val.short_name }}</td>
+				  <td>{{ val.country__short_name }}</td>
+				  <td>{{ val.industry__name }}</td>
+			      <td>{{ val.ticker }}</td>
+			      <td><a href="{{ val.website }}"> {{ val.website }} </a></td>
+				  <td>{{ val.stock_price__price }} {{ stock_price__currency__short_name }}</td>
+
+				  {% for json_val in val.fundamentals__financial_indicators.values %}
+				    <td>{{ json_val }}</td>
+				  {% endfor %}
+
+			    </tr>
+			  {% endfor %}
+			  </tbody>
+			</table>
+  		</div>
+  	</section>
+
+{% endblock %}

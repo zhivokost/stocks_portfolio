@@ -22,4 +22,5 @@ urlpatterns = [
     path('__debug__/', include('debug_toolbar.urls')),
     path('', views.portfolio_list),
     path('stocks_list', views.stocks_list_in_portfolio),
+    path('search_companies', views.search_companies),
 ]
