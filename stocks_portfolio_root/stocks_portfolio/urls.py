@@ -15,7 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from rest_framework.routers import SimpleRouter
+
 from stocks_app import views
+from stocks_app.views import CompanyViewSet
+
+router = SimpleRouter()
+router.register(r'company', CompanyViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,3 +30,5 @@ urlpatterns = [
     path('stocks_list', views.stocks_list_in_portfolio),
     path('search_companies', views.search_companies),
 ]
+
+urlpatterns += router.urls

@@ -4,7 +4,6 @@
 
 {% block content %}
 <!-- Таблица -->
-
   	<section>
   		<div class="container">
   			<h1 class="text-3">Акции компаний в инвест портфеле</h1>
@@ -28,7 +27,7 @@
 			      <td>{{ val.company__short_name }}</td>
 				  <td>{{ val.stocks_count }}</td>
 				  <td>{{ val.buy_price }}</td>
-			      <td>{{ val.invested_amount }} {{ obj.currency__short_name }}</td>
+			      <td>{{ val.invested_amount }} {{ val.currency__short_name }}</td>
 
 				  {% for json_val in val.company__fundamentals__financial_indicators.values %}
 				    <td>{{ json_val }}</td>
