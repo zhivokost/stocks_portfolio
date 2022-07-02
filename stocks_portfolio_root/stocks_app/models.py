@@ -96,7 +96,7 @@ class Fundamentals(models.Model):
         verbose_name_plural = 'Фундаментальные показатели компании'
         ordering = ['is_actual']
 
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания')
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания', related_name='fundamentals')
     financial_indicators = models.JSONField(verbose_name='Финансовые показатели')
     measure = models.ForeignKey(Measure, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Измерение в')
     currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, verbose_name='Валюта')
@@ -104,9 +104,9 @@ class Fundamentals(models.Model):
     public_date = models.DateField(blank=True, null=True, verbose_name='Дата публикации отчета')
     is_actual = models.BooleanField(verbose_name='Актуальный?')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Изменено')
+    updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name='Изменено')
     next_public_date = models.DateField(blank=True, null=True, verbose_name='Дата публикации следующего отчета')
-    source_site = models.URLField(verbose_name='Источник сведений о фин. показателях')
+    source_site = models.URLField(blank=True, null=True, verbose_name='Источник сведений о фин. показателях')
 
     def __str__(self):
         return f'{self.company}'
@@ -121,7 +121,7 @@ class Stock_price(models.Model):
         verbose_name_plural = 'Цены акции компании'
         ordering = ['is_actual']
 
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания')
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания', related_name='stock_price')
     price = models.FloatField(verbose_name='Цена акции')
     currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, verbose_name='Валюта')
     date_price = models.DateField(verbose_name='Цена на дату')

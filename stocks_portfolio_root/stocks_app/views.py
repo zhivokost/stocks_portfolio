@@ -26,10 +26,11 @@ def search_companies(request):
 
 
 class CompanyViewSet(ModelViewSet):
-    queryset = Company.objects.all()
+    queryset = Company.objects.all().select_related('industry').prefetch_related('stock_price', 'fundamentals').filter(fundamentals__is_actual=True)
+        #values('short_name', 'ticker', 'website', 'industry__name')
     serializer_class = CompanySerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filter_fields = ['short_name', 'full_name', 'ticker']  # /company/?short_name='Новатэк'
     search_fields = ['short_name', 'full_name', 'ticker']  # /company/?search=Новатэк
-    ordering_fields = ['industry', 'country', 'updated_at'] # /company/?ordering=-updated_at
+    ordering_fields = ['industry', 'country', 'updated_at']  # /company/?ordering=-updated_at
 
