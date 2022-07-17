@@ -11,7 +11,7 @@ class Industry(models.Model):
         verbose_name = 'Отрасль'
         verbose_name_plural = 'Отрасли'
 
-    name = models.CharField(max_length=200, verbose_name='Название отрасли')
+    name = models.CharField(max_length=200, verbose_name='Название отрасли', unique=True)
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
 
     def __str__(self):
@@ -26,7 +26,7 @@ class Country(models.Model):
         verbose_name = 'Страна'
         verbose_name_plural = 'Страны'
 
-    short_name = models.CharField(max_length=100, verbose_name='Краткое название страны')
+    short_name = models.CharField(max_length=100, verbose_name='Краткое название страны', unique=True)
     full_name = models.CharField(max_length=250, blank=True, null=True, verbose_name='Полное наименование')
 
     def __str__(self):
@@ -41,7 +41,7 @@ class Measure(models.Model):
         verbose_name = 'Мера измерения'
         verbose_name_plural = 'Меры измерения'
 
-    short_name = models.CharField(max_length=50, verbose_name='Сокращенное название меры')
+    short_name = models.CharField(max_length=50, verbose_name='Сокращенное название меры', unique=True)
     full_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Полное название')
 
     def __str__(self):
@@ -57,7 +57,7 @@ class Currency(models.Model):
         verbose_name_plural = 'Валюты'
         ordering = ['short_name']
 
-    short_name = models.CharField(max_length=50, verbose_name='Скоращенное название валюты')
+    short_name = models.CharField(max_length=50, verbose_name='Скоращенное название валюты', unique=True)
     full_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Полное наименование')
 
     def __str__(self):
@@ -75,7 +75,7 @@ class Company(models.Model):
 
     short_name = models.CharField(max_length=200, verbose_name='Краткое наименование')
     full_name = models.TextField(blank=True, null=True, verbose_name='Полное')
-    ticker = models.CharField(max_length=20, verbose_name='Тикер акции')
+    ticker = models.CharField(max_length=20, verbose_name='Тикер акции', unique=True)
     website = models.URLField(verbose_name='Сайт компании')
     industry = models.ForeignKey(Industry, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Отрасль')
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Страна')
@@ -95,6 +95,7 @@ class Fundamentals(models.Model):
         verbose_name = 'Фундаментальные показатели компании'
         verbose_name_plural = 'Фундаментальные показатели компании'
         ordering = ['is_actual']
+        unique_together = ['financial_indicators', 'report_date']
 
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания', related_name='fundamentals')
     financial_indicators = models.JSONField(verbose_name='Финансовые показатели')
@@ -102,7 +103,7 @@ class Fundamentals(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, verbose_name='Валюта')
     report_date = models.DateField(null=True, verbose_name='Отчетная дата')
     public_date = models.DateField(blank=True, null=True, verbose_name='Дата публикации отчета')
-    is_actual = models.BooleanField(verbose_name='Актуальный?')
+    is_actual = models.BooleanField(verbose_name='Актуальный?', default=False)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
     updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name='Изменено')
     next_public_date = models.DateField(blank=True, null=True, verbose_name='Дата публикации следующего отчета')
@@ -124,8 +125,8 @@ class Stock_price(models.Model):
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания', related_name='stock_price')
     price = models.FloatField(verbose_name='Цена акции')
     currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, verbose_name='Валюта')
-    date_price = models.DateField(verbose_name='Цена на дату')
-    is_actual = models.BooleanField(verbose_name='Актуальная?')
+    date_price = models.DateTimeField(verbose_name='Цена на дату')
+    is_actual = models.BooleanField(verbose_name='Актуальная?', default=False)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Изменено')
 
@@ -140,6 +141,7 @@ class Portfolio(models.Model):
         db_table = 'Portfolio'
         verbose_name = 'Инвестиционный портфель'
         verbose_name_plural = 'Инвестиционные портфели'
+        unique_together = ['name', 'user']
 
     name = models.CharField(max_length=200, verbose_name='Название портфеля')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Владелец')
@@ -157,6 +159,7 @@ class Stock_portfolio(models.Model):
         verbose_name = 'Акции компаний в портфеле'
         verbose_name_plural = 'Акции компаний в портфеле'
         ordering = ['company']
+        unique_together = ['portfolio', 'company']
 
     portfolio = models.ForeignKey(Portfolio, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Портфель')
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Компания')
