@@ -1,0 +1,47 @@
+CREATE OR REPLACE FUNCTION set_actual_in_stock_price() RETURNS trigger AS $$
+declare 
+	id_price integer;
+	date_price timestamp;
+begin
+	IF TG_OP = 'INSERT' THEN
+		select sp.id, sp.date_price into id_price, date_price from "Stock_price" sp where sp.company_id = new.company_id and sp.is_actual = true order by sp.updated_at desc LIMIT 1;   
+			if new.date_price > date_price or date_price is null then
+				update "Stock_price" sp set is_actual = false where sp.company_id = new.company_id;
+				update "Stock_price" sp set is_actual = true where sp.id = new.id;
+			end if;
+        RETURN NEW;
+       
+    ELSIF TG_OP = 'UPDATE' then
+    	select sp.id, sp.date_price into id_price, date_price from "Stock_price" sp where sp.company_id = new.company_id order by sp.date_price desc, sp.updated_at desc LIMIT 1;
+			if new.date_price = date_price and new.is_actual = false then
+				update "Stock_price" sp set is_actual = false where sp.company_id = new.company_id;
+				update "Stock_price" sp set is_actual = true where sp.id = new.id;
+			elsif new.date_price < date_price and new.is_actual = true then
+				update "Stock_price" sp set is_actual = false where sp.company_id = new.company_id;
+				update "Stock_price" sp set is_actual = true where sp.id = id_price;
+			end if;
+        RETURN NEW;
+       
+    ELSIF TG_OP = 'DELETE' then
+    	if old.is_actual = true then
+    		select sp.id, sp.date_price into id_price, date_price from "Stock_price" sp where sp.company_id = old.company_id order by sp.date_price desc, sp.updated_at desc LIMIT 1;	
+    		update "Stock_price" as sp set is_actual = true where sp.id = id_price; 
+    	end if;
+        RETURN OLD;
+       
+    END IF;
+   
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+create trigger set_actual after
+insert
+    or
+delete
+    or
+update of date_price
+    on
+    public."Stock_price" for each row execute function set_actual_in_stock_price()
