@@ -21,13 +21,14 @@ from rest_framework.routers import SimpleRouter
 from stocks_app import views
 
 router = SimpleRouter()
-router.register(r'company', views.CompanyViewSet)
+#router.register(r'company', views.CompanyViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.portfolio_list),
-    path('stocks_list', views.stocks_list_in_portfolio),
-    path('search_companies', views.search_companies),
+    path('', views.GetCompanyInfoView.as_view())
+#    path('', views.portfolio_list),
+#    path('stocks_list', views.stocks_list_in_portfolio),
+#    path('search_companies', views.search_companies),
 ]
 
 urlpatterns += router.urls

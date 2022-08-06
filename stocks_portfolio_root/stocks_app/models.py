@@ -11,7 +11,7 @@ class Industry(models.Model):
         verbose_name = 'Отрасль'
         verbose_name_plural = 'Отрасли'
 
-    name = models.CharField(max_length=200, verbose_name='Название отрасли', unique=True)
+    name = models.CharField(max_length=100, verbose_name='Название отрасли', unique=True)
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
 
     def __str__(self):
@@ -26,8 +26,8 @@ class Country(models.Model):
         verbose_name = 'Страна'
         verbose_name_plural = 'Страны'
 
-    short_name = models.CharField(max_length=100, verbose_name='Краткое название страны', unique=True)
-    full_name = models.CharField(max_length=250, blank=True, null=True, verbose_name='Полное наименование')
+    short_name = models.CharField(max_length=50, verbose_name='Краткое название страны', unique=True)
+    full_name = models.CharField(max_length=200, blank=True, null=True, verbose_name='Полное наименование')
 
     def __str__(self):
         return f'{self.short_name}'
@@ -41,8 +41,8 @@ class Measure(models.Model):
         verbose_name = 'Мера измерения'
         verbose_name_plural = 'Меры измерения'
 
-    short_name = models.CharField(max_length=50, verbose_name='Сокращенное название меры', unique=True)
-    full_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Полное название')
+    short_name = models.CharField(max_length=10, verbose_name='Сокращенное название меры', unique=True)
+    full_name = models.CharField(max_length=60, blank=True, null=True, verbose_name='Полное название')
 
     def __str__(self):
         return f'{self.short_name}'
@@ -57,8 +57,8 @@ class Currency(models.Model):
         verbose_name_plural = 'Валюты'
         ordering = ['short_name']
 
-    short_name = models.CharField(max_length=50, verbose_name='Скоращенное название валюты', unique=True)
-    full_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Полное наименование')
+    short_name = models.CharField(max_length=10, verbose_name='Скоращенное название валюты', unique=True)
+    full_name = models.CharField(max_length=60, blank=True, null=True, verbose_name='Полное наименование')
 
     def __str__(self):
         return f'{self.short_name}'
@@ -73,9 +73,9 @@ class Company(models.Model):
         verbose_name_plural = 'Информация о компаниях'
         ordering = ['short_name']
 
-    short_name = models.CharField(max_length=200, verbose_name='Краткое наименование')
-    full_name = models.TextField(blank=True, null=True, verbose_name='Полное')
-    ticker = models.CharField(max_length=20, verbose_name='Тикер акции', unique=True)
+    short_name = models.CharField(max_length=100, verbose_name='Краткое наименование')
+    full_name = models.CharField(max_length=250, blank=True, null=True, verbose_name='Полное')
+    ticker = models.CharField(max_length=10, verbose_name='Тикер акции', unique=True)
     website = models.URLField(verbose_name='Сайт компании')
     industry = models.ForeignKey(Industry, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Отрасль')
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Страна')
@@ -110,7 +110,7 @@ class Fundamentals(models.Model):
     source_site = models.URLField(blank=True, null=True, verbose_name='Источник сведений о фин. показателях')
 
     def __str__(self):
-        return f'{self.company}'
+        return f'{self.company}, {self.report_date}'
 
 
 class Stock_price(models.Model):
@@ -143,7 +143,7 @@ class Portfolio(models.Model):
         verbose_name_plural = 'Инвестиционные портфели'
         unique_together = ['name', 'user']
 
-    name = models.CharField(max_length=200, verbose_name='Название портфеля')
+    name = models.CharField(max_length=100, verbose_name='Название портфеля')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Владелец')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
 

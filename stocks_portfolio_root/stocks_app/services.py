@@ -72,4 +72,4 @@ def update_stock_prices():
 
 
 
-update_stock_prices()
+#update_stock_prices()
