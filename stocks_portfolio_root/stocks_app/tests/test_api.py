@@ -1,11 +1,40 @@
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stocks_portfolio.settings")
+django.setup()
+
 import json
 
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from stocks_app.models import Company
-from stocks_app.serializers import CompanySerializer
+from stocks_app.models import Company, Portfolio
+
+
+
+
+class PortfolioApiTestCase(APITestCase):
+
+    def setUp(self):
+        pass
+
+    def test_create(self):
+        count = Portfolio.objects.all().count()
+        url = reverse('portfolio-list')
+        data = {
+                "name": "ИИС 1",
+                "owner": {
+                    "username": "zhivokost"
+                        }
+                }
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(count + 1, Portfolio.objects.all().count())
 
 
 class CompaniesApiTestCase(APITestCase):

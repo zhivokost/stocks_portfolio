@@ -1,9 +1,30 @@
+import os
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stocks_portfolio.settings")
+
+import django
+django.setup()
+
+from django.contrib.auth.models import User
+
 import datetime
 
 from django.test import TestCase
 
-from stocks_app.models import Company, Industry, Stock_price, Fundamentals
-from stocks_app.serializers import CompanySerializer
+from stocks_app.models import Company, Industry, Fundamentals, Portfolio
+from stocks_app.serializers import PortfolioSerializer, UserSerializer
+
+
+
+class PortfolioSerializerTestCase(TestCase):
+    def setUp(self):
+        self.data = {"name": "ИИС 3", "owner": {"username": "zhivokost133"}}
+
+    def test_create(self):
+        serializer = PortfolioSerializer(data=self.data)
+        serializer.is_valid()
+        serializer.save()
+        self.assertEqual(True, serializer.is_valid())
+
 
 
 class CompanySerializerTestCase(TestCase):

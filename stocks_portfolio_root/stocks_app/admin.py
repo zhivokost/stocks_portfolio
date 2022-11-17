@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Industry, Country, Measure, Currency, Fundamentals, Stock_price, Company, Portfolio, Stock_portfolio
+from .models import Industry, Country, Measure, Currency, Fundamentals, StockPrice, Company, Portfolio, StocksInPortfolio
 
 # Register your models here.
 
@@ -8,7 +8,7 @@ admin.site.register(Country)
 admin.site.register(Measure)
 admin.site.register(Currency)
 admin.site.register(Fundamentals)
-admin.site.register(Stock_price)
+admin.site.register(StockPrice)
 admin.site.register(Company)
 admin.site.register(Portfolio)
-admin.site.register(Stock_portfolio)
+admin.site.register(StocksInPortfolio)

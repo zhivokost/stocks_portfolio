@@ -1,3 +1,10 @@
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stocks_portfolio.settings")
+django.setup()
+
+
 """stocks_portfolio URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -15,23 +22,23 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from rest_framework.routers import SimpleRouter
 
-from stocks_app import views
+from stocks_app.views import PortfolioView, StocksInPortfolioView
 
 router = SimpleRouter()
-#router.register(r'company', views.CompanyViewSet)
+router.register('portfolio', PortfolioView, basename='portfolio')
+router.register('portfolio/(?P<id_portfolio>[^/.]+)/stocks_in_portfolio', StocksInPortfolioView, basename='stocks_portfolio')
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.GetCompanyInfoView.as_view())
-#    path('', views.portfolio_list),
-#    path('stocks_list', views.stocks_list_in_portfolio),
-#    path('search_companies', views.search_companies),
-]
+    path('api/auth/', include('djoser.urls')),
+    re_path(r'^auth/', include('djoser.urls.authtoken')),
+    path('api/', include(router.urls)),
 
-urlpatterns += router.urls
+]
 
 if settings.DEBUG:
     urlpatterns = [path('__debug__/', include('debug_toolbar.urls'))] + urlpatterns

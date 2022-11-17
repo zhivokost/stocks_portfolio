@@ -77,8 +77,10 @@ class Company(models.Model):
     full_name = models.CharField(max_length=250, blank=True, null=True, verbose_name='Полное')
     ticker = models.CharField(max_length=10, verbose_name='Тикер акции', unique=True)
     website = models.URLField(verbose_name='Сайт компании')
-    industry = models.ForeignKey(Industry, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Отрасль')
-    country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Страна')
+    industry = models.ForeignKey(Industry, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Отрасль',
+                                 related_name='company_industry')
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Страна',
+                                related_name='company_country')
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Изменено')
@@ -97,10 +99,13 @@ class Fundamentals(models.Model):
         ordering = ['is_actual']
         unique_together = ['financial_indicators', 'report_date']
 
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания', related_name='fundamentals')
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания',
+                                related_name='company_fund')
     financial_indicators = models.JSONField(verbose_name='Финансовые показатели')
-    measure = models.ForeignKey(Measure, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Измерение в')
-    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, verbose_name='Валюта')
+    measure = models.ForeignKey(Measure, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Измерение в',
+                                related_name='fin_measure')
+    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, verbose_name='Валюта',
+                                 related_name='fin_currency')
     report_date = models.DateField(null=True, verbose_name='Отчетная дата')
     public_date = models.DateField(blank=True, null=True, verbose_name='Дата публикации отчета')
     is_actual = models.BooleanField(verbose_name='Актуальный?', default=False)
@@ -113,18 +118,20 @@ class Fundamentals(models.Model):
         return f'{self.company}, {self.report_date}'
 
 
-class Stock_price(models.Model):
+class StockPrice(models.Model):
     """ Цена акции компании """
 
     class Meta:
-        db_table = 'Stock_price'
+        db_table = 'Stock_prices'
         verbose_name = 'Цена акции компании'
         verbose_name_plural = 'Цены акции компании'
         ordering = ['is_actual']
 
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания', related_name='stock_price')
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания',
+                                related_name='stock_price')
     price = models.FloatField(verbose_name='Цена акции')
-    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, verbose_name='Валюта')
+    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, verbose_name='Валюта',
+                                 related_name='price_curr')
     date_price = models.DateTimeField(verbose_name='Цена на дату')
     is_actual = models.BooleanField(verbose_name='Актуальная?', default=False)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
@@ -141,32 +148,36 @@ class Portfolio(models.Model):
         db_table = 'Portfolio'
         verbose_name = 'Инвестиционный портфель'
         verbose_name_plural = 'Инвестиционные портфели'
-        unique_together = ['name', 'user']
+        unique_together = ['name', 'owner']
 
     name = models.CharField(max_length=100, verbose_name='Название портфеля')
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Владелец')
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Владелец',
+                              related_name='owner')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
 
     def __str__(self):
         return f'{self.name}'
 
 
-class Stock_portfolio(models.Model):
+class StocksInPortfolio(models.Model):
     """ Акции компании в портфеле """
 
     class Meta:
-        db_table = 'Stock_portfolio'
+        db_table = 'Stocks_portfolio'
         verbose_name = 'Акции компаний в портфеле'
         verbose_name_plural = 'Акции компаний в портфеле'
         ordering = ['company']
         unique_together = ['portfolio', 'company']
 
-    portfolio = models.ForeignKey(Portfolio, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Портфель')
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Компания')
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Портфель',
+                                  related_name='portfolio')
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Компания',
+                                related_name='company_in_portfolio')
     stocks_count = models.IntegerField(verbose_name='Количество акций', null=True)
     buy_price = models.FloatField(verbose_name='Цена покупки', null=True)
     invested_amount = models.FloatField(verbose_name='Сумма инвестиций', null=True)
-    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Валюта')
+    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Валюта',
+                                 related_name='portfolio_curr')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Изменено')
 
