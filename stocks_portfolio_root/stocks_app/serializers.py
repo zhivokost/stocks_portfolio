@@ -1,13 +1,7 @@
-import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stocks_portfolio.settings")
-import django
-django.setup()
-
-
-from copy import copy
 from django.contrib.auth.models import User
-from rest_framework import serializers, validators
-from stocks_app.models import Portfolio, StocksInPortfolio
+from rest_framework import serializers
+from stocks_app.models import Portfolio, StocksInPortfolio, Company, Fundamentals, StockPrice, Industry, Country, \
+    Measure, Currency
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -16,20 +10,57 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
-'''
-        extra_kwargs = {
-            'username': {'validators': []},
-        }
 
-    def create(self, validated_data):
-        user = User.objects.create(**validated_data)
-        return user
 
-    def update(self, instance, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        instance.save()
-        return instance
-'''
+class CurrencySerializer(serializers.ModelSerializer):
+    """ Сериализация валюты """
+
+    class Meta:
+        model = Currency
+        fields = ['short_name', 'full_name']
+
+
+class MeasureSerializer(serializers.ModelSerializer):
+    """ Сериализация меры измерения валюты (тыс., млн., млрд.) """
+
+    class Meta:
+        model = Measure
+        fields = ['short_name', 'full_name']
+
+
+class IndustrySerializer(serializers.ModelSerializer):
+    """ Сериализация индустрии(отрасли) """
+
+    class Meta:
+        model = Industry
+        fields = ['name', 'description']
+
+
+class CountrySerializer(serializers.ModelSerializer):
+    """ Сериализация сведений о стране """
+
+    class Meta:
+        model = Country
+        fields = ['short_name', 'full_name']
+
+
+class FundamentalsSerializer(serializers.ModelSerializer):
+    """ Сериализация фундаментальных показателей компании """
+    currency = CurrencySerializer(read_only=True)
+    measure = MeasureSerializer(read_only=True)
+
+    class Meta:
+        model = Fundamentals
+        fields = ['report_date', 'financial_indicators', 'currency', 'measure', 'public_date',
+                  'source_site', 'next_public_date']
+
+
+class StockPriceSerializer(serializers.ModelSerializer):
+    """ Сериализация цен на акции компании """
+
+    class Meta:
+        model = StockPrice
+        fields = '__all__'
 
 
 class PortfolioSerializer(serializers.ModelSerializer):
@@ -63,7 +94,7 @@ class PortfolioSerializer(serializers.ModelSerializer):
 
 class PortfolioListSerializer(serializers.ModelSerializer):
     """ Сериализация для чтения списка портфелей """
-    owner = UserSerializer()
+    owner = UserSerializer(read_only=True)
 
     class Meta:
         model = Portfolio
@@ -100,6 +131,7 @@ class StocksInPortfolioSerializer(serializers.ModelSerializer):
 
 
 class StocksInPortfolioListSerializer(serializers.ModelSerializer):
+    """ Сериализация списка компаний в портфеле для просмотра """
     company_id = serializers.IntegerField()
     company_name = serializers.CharField(source='company__short_name')
     ticker = serializers.CharField(source='company__ticker')
@@ -108,28 +140,28 @@ class StocksInPortfolioListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StocksInPortfolio
-        #fields = ['company', 'company_name', 'ticker', 'country', 'currency']
         exclude = ['created_at', 'updated_at', 'portfolio', 'company']
 
-'''
-class CompanyListSerializer(serializers.ModelSerializer):
-#    id = serializers.IntegerField()
-#    company = serializers.CharField(source='short_name')
-#    ticker = serializers.CharField()
-#    site = serializers.URLField(source='website')
-    industry = serializers.CharField(source='industry__name')
-    price = serializers.FloatField(source='stock_price__price')
-    price_currency = serializers.CharField(source='stock_price__currency__short_name')
-    price_date = serializers.DateTimeField(source='stock_price__date_price')
-    fin_indicators = serializers.JSONField(source='fundamentals__financial_indicators')
-    fin_measure = serializers.CharField(source='fundamentals__measure__short_name')
-    fin_currency = serializers.CharField(source='fundamentals__currency__short_name')
-    fin_report_date = serializers.DateField(source='fundamentals__report_date')
+
+class CompanySerializer(serializers.ModelSerializer):
+    """ Сериализация сведений о компании """
 
     class Meta:
         model = Company
-        exclude = ['full_name', 'description', 'created_at', 'updated_at', 'country']
-'''
+        exclude = ['created_at', 'updated_at']
+
+
+class CompanyListSerializer(serializers.ModelSerializer):
+    """ Сериализация сведений о компании для просмотра """
+    company_fund = FundamentalsSerializer(source='actual_fund', many=True, read_only=True)
+    stock_price = StockPriceSerializer(source='actual_stock_price', many=True, read_only=True)
+    industry = IndustrySerializer(read_only=True)
+    country = CountrySerializer(read_only=True)
+
+    class Meta:
+        model = Company
+        fields = ['id', 'short_name', 'ticker', 'industry', 'company_fund',
+                  'stock_price', 'full_name', 'website', 'country', 'description']
 
 
 

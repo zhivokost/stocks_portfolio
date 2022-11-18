@@ -1,10 +1,3 @@
-import os
-import django
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stocks_portfolio.settings")
-django.setup()
-
-
 """stocks_portfolio URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -25,11 +18,12 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from rest_framework.routers import SimpleRouter
 
-from stocks_app.views import PortfolioView, StocksInPortfolioView
+from stocks_app.views import PortfolioView, StocksInPortfolioView, CompanyView
 
 router = SimpleRouter()
 router.register('portfolio', PortfolioView, basename='portfolio')
 router.register('portfolio/(?P<id_portfolio>[^/.]+)/stocks_in_portfolio', StocksInPortfolioView, basename='stocks_portfolio')
+router.register('companies', CompanyView, basename='companies')
 
 
 urlpatterns = [

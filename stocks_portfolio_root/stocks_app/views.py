@@ -1,25 +1,15 @@
-'''
-import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stocks_portfolio.settings")
-import django
-django.setup()
-'''
-from django.contrib.auth.models import AnonymousUser
-from rest_framework import mixins
+from django.db.models import Prefetch
 from rest_framework.response import Response
-from rest_framework.views import APIView
-
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from stocks_app.models import Portfolio, StocksInPortfolio
+from stocks_app.models import Portfolio, StocksInPortfolio, Company, Fundamentals, StockPrice
 from stocks_app.serializers import PortfolioSerializer, PortfolioListSerializer, \
-    StocksInPortfolioSerializer, StocksInPortfolioListSerializer
+    StocksInPortfolioSerializer, StocksInPortfolioListSerializer, CompanySerializer, CompanyListSerializer
 
 
 class PortfolioView(ModelViewSet):
@@ -28,10 +18,10 @@ class PortfolioView(ModelViewSet):
     serializer_class = PortfolioSerializer
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filter_fields = ['name', 'owner', 'owner__username'] # /portfolio/?owner__username=test_user2
+    filter_fields = ['name', 'owner', 'owner__username']  # /portfolio/?owner__username=test_user2
     search_fields = ['name', 'owner__username', 'owner__first_name', 'owner__last_name',
-                     'owner__email'] # /portfolio/?search=petr
-    ordering_fields = ['id', 'name', 'owner'] # /portfolio/?ordering=-owner
+                     'owner__email']  # /portfolio/?search=petr
+    ordering_fields = ['id', 'name', 'owner']  # /portfolio/?ordering=-owner
 
 #    authentication_classes = [TokenAuthentication]
 #    permission_classes = [IsAuthenticated]
@@ -57,12 +47,11 @@ class PortfolioView(ModelViewSet):
             queryset = backend().filter_queryset(self.request, queryset, self)
         return queryset
 
-
 #    def perform_create(self, serializer):
-        #serializer.save(owner=self.request.user)
+        # serializer.save(owner=self.request.user)
 
 #    def perform_update(self, serializer):
-        #serializer.save(owner=self.request.user)
+        # serializer.save(owner=self.request.user)
 
 
 class StocksInPortfolioView(ModelViewSet):
@@ -113,56 +102,46 @@ class StocksInPortfolioView(ModelViewSet):
         return queryset
 
 
-'''
-class CompanyListView(GenericViewSet, mixins.ListModelMixin):
-    queryset = Company.objects \
-        .filter(stockprice__is_actual=True, fundamentals__is_actual=True) \
-        .values(
-        'id', 'short_name', 'ticker', 'website',
-        'industry__name',
-        'stock_price__id', 'stock_price__price', 'stock_price__date_price', 'stock_price__currency__short_name',
-        'fundamentals__financial_indicators', 'fundamentals__report_date', 'fundamentals__measure__short_name',
-        'fundamentals__currency__short_name'
-    )
-    serializer_class = CompanyListSerializer
-'''
-'''
-    def get(self, request):
-        queryset = Company.objects \
-            .filter(stock_price__is_actual=True, fundamentals__is_actual=True) \
-            .values(
-                'id', 'short_name', 'ticker', 'website',
-                'industry__name',
-                'stock_price__id', 'stock_price__price', 'stock_price__date_price', 'stock_price__currency__short_name',
-                'fundamentals__financial_indicators', 'fundamentals__report_date', 'fundamentals__measure__short_name',
-                'fundamentals__currency__short_name'
-            )
+class CompanyView(ModelViewSet):
+    """ Информация о компаниях (фирмах, организациях) """
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
 
-        serializer_for_queryset = CompanyListSerializer(instance=queryset, many=True)
-        return Response(serializer_for_queryset.data)
-'''
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_fields = ['id', 'short_name', 'ticker', 'industry__name', 'company_fund__report_date',
+                     'company_fund__public_date', 'full_name', 'website', 'country__short_name', 'country__full_name']
+    # /companies/?short_name=ММК
+    search_fields = ['short_name', 'ticker', 'industry__name', 'full_name', 'country__short_name', 'country__full_name']
+    # /companies/?search=ит
+    ordering_fields = ['id', 'short_name', 'ticker', 'industry__name', 'company_fund__report_date',
+                       'company_fund__public_date', 'full_name', 'website', 'country__short_name', 'country__full_name',
+                       'company_fund__financial_indicators__EBITDA']
+    # /companies/?ordering=id
 
+    def list(self, request, *args, **kwargs):
+        """ вывод списка компаний """
+        queryset = Company.objects.prefetch_related(Prefetch('company_fund', queryset=Fundamentals.objects
+                                                             .filter(is_actual=True), to_attr='actual_fund'),
+                                                    Prefetch('stock_price', queryset=StockPrice.objects
+                                                             .filter(is_actual=True), to_attr='actual_stock_price'))\
+                                  .select_related('country', 'industry')
+        queryset = self.filter_queryset(queryset)
+        serializer = CompanyListSerializer(queryset, many=True)
+        return Response(serializer.data)
 
+    def retrieve(self, request, *args, **kwargs):
+        """ вывод информации о конкретной компании"""
+        queryset = Company.objects.prefetch_related(Prefetch('company_fund', queryset=Fundamentals.objects
+                                                             .filter(is_actual=True), to_attr='actual_fund'),
+                                                    Prefetch('stock_price', queryset=StockPrice.objects
+                                                             .filter(is_actual=True), to_attr='actual_stock_price')) \
+                                  .select_related('country', 'industry')
+        company = get_object_or_404(queryset, pk=self.kwargs['pk'])
+        serializer = CompanyListSerializer(company, many=False)
+        return Response(serializer.data)
 
-
-
-
-
-'''
-class CompanyListViewSet(ReadOnlyModelViewSet):
-    queryset = Company.objects \
-        .filter(stock_price__is_actual=True, fundamentals__is_actual=True) \
-        .values(
-        'id', 'short_name', 'ticker', 'website',
-        'industry__name',
-        'stock_price__id', 'stock_price__price', 'stock_price__date_price', 'stock_price__currency__short_name',
-        'fundamentals__financial_indicators', 'fundamentals__report_date', 'fundamentals__measure__short_name',
-        'fundamentals__currency__short_name'
-    )
-
-'''
-
-
-
-
-
+    def filter_queryset(self, queryset):
+        """ фильтрация, поиск, сортировка """
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, self)
+        return queryset
