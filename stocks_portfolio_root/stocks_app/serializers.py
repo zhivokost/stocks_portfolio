@@ -46,21 +46,38 @@ class CountrySerializer(serializers.ModelSerializer):
 
 class FundamentalsSerializer(serializers.ModelSerializer):
     """ Сериализация фундаментальных показателей компании """
+
+    class Meta:
+        model = Fundamentals
+        exclude = ['company', 'created_at', 'updated_at']
+
+
+class FundamentalsListSerializer(serializers.ModelSerializer):
+    """ Сериализация фундаментальных показателей компании для просмотра """
     currency = CurrencySerializer(read_only=True)
     measure = MeasureSerializer(read_only=True)
 
     class Meta:
         model = Fundamentals
         fields = ['report_date', 'financial_indicators', 'currency', 'measure', 'public_date',
-                  'source_site', 'next_public_date']
+                  'source_site', 'next_public_date', 'is_actual']
 
 
 class StockPriceSerializer(serializers.ModelSerializer):
-    """ Сериализация цен на акции компании """
+    """ Сериализация цен на акции компании для просмотра """
 
     class Meta:
         model = StockPrice
-        fields = '__all__'
+        exclude = ['created_at', 'updated_at', 'company']
+
+
+class StockPriceListSerializer(serializers.ModelSerializer):
+    """ Сериализация цен на акции компании для просмотра """
+    currency = CurrencySerializer(read_only=True)
+
+    class Meta:
+        model = StockPrice
+        fields = ['price', 'currency', 'date_price']
 
 
 class PortfolioSerializer(serializers.ModelSerializer):
@@ -153,8 +170,8 @@ class CompanySerializer(serializers.ModelSerializer):
 
 class CompanyListSerializer(serializers.ModelSerializer):
     """ Сериализация сведений о компании для просмотра """
-    company_fund = FundamentalsSerializer(source='actual_fund', many=True, read_only=True)
-    stock_price = StockPriceSerializer(source='actual_stock_price', many=True, read_only=True)
+    company_fund = FundamentalsListSerializer(source='actual_fund', many=True, read_only=True)
+    stock_price = StockPriceListSerializer(source='actual_stock_price', many=True, read_only=True)
     industry = IndustrySerializer(read_only=True)
     country = CountrySerializer(read_only=True)
 

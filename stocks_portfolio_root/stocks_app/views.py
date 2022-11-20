@@ -9,7 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from stocks_app.models import Portfolio, StocksInPortfolio, Company, Fundamentals, StockPrice
 from stocks_app.serializers import PortfolioSerializer, PortfolioListSerializer, \
-    StocksInPortfolioSerializer, StocksInPortfolioListSerializer, CompanySerializer, CompanyListSerializer
+    StocksInPortfolioSerializer, StocksInPortfolioListSerializer, CompanySerializer, CompanyListSerializer, \
+    FundamentalsSerializer, FundamentalsListSerializer, StockPriceSerializer
 
 
 class PortfolioView(ModelViewSet):
@@ -145,3 +146,67 @@ class CompanyView(ModelViewSet):
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, self)
         return queryset
+
+
+class FundamentalsView(ModelViewSet):
+    """ фундаментальные показатели компании """
+    serializer_class = FundamentalsSerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_fields = ['report_date', 'public_date', 'next_public_date', 'is_actual']
+    # /fundamentals/?report_date=2021-12-31
+    search_fields = ['report_date', 'public_date', 'next_public_date', 'is_actual']
+    # /fundamentals/?search=2022-03
+    ordering_fields = ['report_date', 'public_date', 'next_public_date', 'is_actual']
+    # /fundamentals/?ordering=-is_actual
+
+    def get_queryset(self):
+        return Fundamentals.objects.filter(company_id=self.kwargs['id_company'])
+
+    def perform_create(self, serializer):
+        serializer.save(company_id=self.kwargs['id_company'])
+
+    def perform_update(self, serializer):
+        serializer.save(company_id=self.kwargs['id_company'])
+
+    def list(self, request, *args, **kwargs):
+        """ вывод списка фундаментальных показателей конкретной компании """
+        queryset = Fundamentals.objects.filter(company_id=self.kwargs['id_company'])
+        queryset = self.filter_queryset(queryset)
+        serializer = FundamentalsListSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        """ вывод информации о фундаментальных показателях на конкретную дату конкретной компании """
+        queryset = Fundamentals.objects.filter(company_id=self.kwargs['id_company'])
+        fundamentals = get_object_or_404(queryset, pk=self.kwargs['pk'])
+        serializer = FundamentalsListSerializer(fundamentals, many=False)
+        return Response(serializer.data)
+
+    def filter_queryset(self, queryset):
+        """ фильтрация, поиск, сортировка """
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, self)
+        return queryset
+
+
+class StockPriceView(ModelViewSet):
+    """ цены на акции компании """
+    serializer_class = StockPriceSerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_fields = ['id', 'price', 'date_price', 'is_actual']
+    # /stock_prices?is_actual=True
+    search_fields = ['price', 'date_price', 'is_actual']
+    # /stock_prices?search=2022-11-19 05:05
+    ordering_fields = ['id', 'price', 'date_price', 'is_actual']
+    # /stock_prices?ordering=-is_actual
+
+    def get_queryset(self):
+        return StockPrice.objects.filter(company_id=self.kwargs['id_company'])
+
+    def perform_create(self, serializer):
+        serializer.save(company_id=self.kwargs['id_company'])
+
+    def perform_update(self, serializer):
+        serializer.save(company_id=self.kwargs['id_company'])

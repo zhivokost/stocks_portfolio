@@ -102,11 +102,11 @@ class Fundamentals(models.Model):
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания',
                                 related_name='company_fund')
     financial_indicators = models.JSONField(verbose_name='Финансовые показатели')
-    measure = models.ForeignKey(Measure, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Измерение в',
+    measure = models.ForeignKey(Measure, on_delete=models.SET_NULL, null=True, verbose_name='Измерение в',
                                 related_name='fin_measure')
     currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, verbose_name='Валюта',
                                  related_name='fin_currency')
-    report_date = models.DateField(null=True, verbose_name='Отчетная дата')
+    report_date = models.DateField(verbose_name='Отчетная дата')
     public_date = models.DateField(blank=True, null=True, verbose_name='Дата публикации отчета')
     is_actual = models.BooleanField(verbose_name='Актуальный?', default=False)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
@@ -125,6 +125,7 @@ class StockPrice(models.Model):
         db_table = 'Stock_prices'
         verbose_name = 'Цена акции компании'
         verbose_name_plural = 'Цены акции компании'
+        unique_together = ['price', 'date_price']
         ordering = ['is_actual']
 
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания',
@@ -151,7 +152,7 @@ class Portfolio(models.Model):
         unique_together = ['name', 'owner']
 
     name = models.CharField(max_length=100, verbose_name='Название портфеля')
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Владелец',
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='Владелец',
                               related_name='owner')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
 
@@ -169,9 +170,9 @@ class StocksInPortfolio(models.Model):
         ordering = ['company']
         unique_together = ['portfolio', 'company']
 
-    portfolio = models.ForeignKey(Portfolio, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Портфель',
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.SET_NULL, null=True, verbose_name='Портфель',
                                   related_name='portfolio')
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Компания',
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, verbose_name='Компания',
                                 related_name='company_in_portfolio')
     stocks_count = models.IntegerField(verbose_name='Количество акций', null=True)
     buy_price = models.FloatField(verbose_name='Цена покупки', null=True)

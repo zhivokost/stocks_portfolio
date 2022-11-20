@@ -18,12 +18,14 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from rest_framework.routers import SimpleRouter
 
-from stocks_app.views import PortfolioView, StocksInPortfolioView, CompanyView
+from stocks_app.views import PortfolioView, StocksInPortfolioView, CompanyView, FundamentalsView, StockPriceView
 
 router = SimpleRouter()
 router.register('portfolio', PortfolioView, basename='portfolio')
 router.register('portfolio/(?P<id_portfolio>[^/.]+)/stocks_in_portfolio', StocksInPortfolioView, basename='stocks_portfolio')
 router.register('companies', CompanyView, basename='companies')
+router.register('companies/(?P<id_company>[^/.]+)/fundamentals', FundamentalsView, basename='fundamentals')
+router.register('companies/(?P<id_company>[^/.]+)/stock_prices', StockPriceView, basename='stock_prices')
 
 
 urlpatterns = [
