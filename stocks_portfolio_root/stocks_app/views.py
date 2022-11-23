@@ -122,9 +122,13 @@ class CompanyView(ModelViewSet):
     def list(self, request, *args, **kwargs):
         """ вывод списка компаний """
         queryset = Company.objects.prefetch_related(Prefetch('company_fund', queryset=Fundamentals.objects
-                                                             .filter(is_actual=True), to_attr='actual_fund'),
+                                                             .filter(is_actual=True)
+                                                             .select_related('measure', 'currency')
+                                                             , to_attr='actual_fund'),
                                                     Prefetch('stock_price', queryset=StockPrice.objects
-                                                             .filter(is_actual=True), to_attr='actual_stock_price'))\
+                                                             .filter(is_actual=True)
+                                                             .select_related('currency')
+                                                             , to_attr='actual_stock_price'))\
                                   .select_related('country', 'industry')
         queryset = self.filter_queryset(queryset)
         serializer = CompanyListSerializer(queryset, many=True)
@@ -133,9 +137,13 @@ class CompanyView(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         """ вывод информации о конкретной компании"""
         queryset = Company.objects.prefetch_related(Prefetch('company_fund', queryset=Fundamentals.objects
-                                                             .filter(is_actual=True), to_attr='actual_fund'),
+                                                             .filter(is_actual=True)
+                                                             .select_related('measure', 'currency')
+                                                             , to_attr='actual_fund'),
                                                     Prefetch('stock_price', queryset=StockPrice.objects
-                                                             .filter(is_actual=True), to_attr='actual_stock_price')) \
+                                                             .filter(is_actual=True)
+                                                             .select_related('currency')
+                                                             , to_attr='actual_stock_price')) \
                                   .select_related('country', 'industry')
         company = get_object_or_404(queryset, pk=self.kwargs['pk'])
         serializer = CompanyListSerializer(company, many=False)
@@ -161,7 +169,7 @@ class FundamentalsView(ModelViewSet):
     # /fundamentals/?ordering=-is_actual
 
     def get_queryset(self):
-        return Fundamentals.objects.filter(company_id=self.kwargs['id_company'])
+        return Fundamentals.objects.filter(company_id=self.kwargs['id_company']).select_related('measure', 'currency')
 
     def perform_create(self, serializer):
         serializer.save(company_id=self.kwargs['id_company'])
@@ -171,14 +179,16 @@ class FundamentalsView(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """ вывод списка фундаментальных показателей конкретной компании """
-        queryset = Fundamentals.objects.filter(company_id=self.kwargs['id_company'])
+        queryset = Fundamentals.objects.filter(company_id=self.kwargs['id_company'])\
+                               .select_related('measure', 'currency')
         queryset = self.filter_queryset(queryset)
         serializer = FundamentalsListSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         """ вывод информации о фундаментальных показателях на конкретную дату конкретной компании """
-        queryset = Fundamentals.objects.filter(company_id=self.kwargs['id_company'])
+        queryset = Fundamentals.objects.filter(company_id=self.kwargs['id_company'])\
+                               .select_related('measure', 'currency')
         fundamentals = get_object_or_404(queryset, pk=self.kwargs['pk'])
         serializer = FundamentalsListSerializer(fundamentals, many=False)
         return Response(serializer.data)

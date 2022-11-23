@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 # Create your models here.
 class Industry(models.Model):
     """ Отрасль (индустрия) """
+    objects = models.Manager()
 
     class Meta:
         db_table = 'Industry'
@@ -20,6 +21,7 @@ class Industry(models.Model):
 
 class Country(models.Model):
     """ Страна """
+    objects = models.Manager()
 
     class Meta:
         db_table = 'Country'
@@ -35,6 +37,7 @@ class Country(models.Model):
 
 class Measure(models.Model):
     """ Мера измерения (тыс., млн., млрд.) """
+    objects = models.Manager()
 
     class Meta:
         db_table = 'Measure'
@@ -50,6 +53,7 @@ class Measure(models.Model):
 
 class Currency(models.Model):
     """ Валюта """
+    objects = models.Manager()
 
     class Meta:
         db_table = 'Currency'
@@ -66,6 +70,7 @@ class Currency(models.Model):
 
 class Company(models.Model):
     """ Информация о компании """
+    objects = models.Manager()
 
     class Meta:
         db_table = 'Company'
@@ -91,6 +96,7 @@ class Company(models.Model):
 
 class Fundamentals(models.Model):
     """ Фундаментальные показатели компании """
+    objects = models.Manager()
 
     class Meta:
         db_table = 'Fundamentals'
@@ -120,6 +126,7 @@ class Fundamentals(models.Model):
 
 class StockPrice(models.Model):
     """ Цена акции компании """
+    objects = models.Manager()
 
     class Meta:
         db_table = 'Stock_prices'
@@ -144,6 +151,7 @@ class StockPrice(models.Model):
 
 class Portfolio(models.Model):
     """ Инвестиционный портфель (счет) """
+    objects = models.Manager()
 
     class Meta:
         db_table = 'Portfolio'
@@ -162,6 +170,7 @@ class Portfolio(models.Model):
 
 class StocksInPortfolio(models.Model):
     """ Акции компании в портфеле """
+    objects = models.Manager()
 
     class Meta:
         db_table = 'Stocks_portfolio'
