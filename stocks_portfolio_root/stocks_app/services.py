@@ -1,14 +1,13 @@
-import os
-import django
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stocks_portfolio.settings")
-django.setup()
-
 import pytz
 from stocks_app.models import Company, StockPrice
 import datetime
 from django.utils.timezone import make_aware
 import requests
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stocks_portfolio.settings")
+django.setup()
 
 
 def load_stock_price_from_moex():

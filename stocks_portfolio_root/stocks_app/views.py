@@ -60,38 +60,44 @@ class StocksInPortfolioView(ModelViewSet):
     serializer_class = StocksInPortfolioSerializer
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filter_fields = ['company_id', 'company__short_name', 'company__ticker', 'company__country__short_name',
-                     'currency__short_name', 'invested_amount']  # /stocks_in_portfolio/?company__ticker=RASP
-    search_fields = ['company__short_name', 'company__ticker', 'company__country__short_name',
-                     'currency__short_name']  # /stocks_in_portfolio/?search=Расп
-    ordering_fields = ['company_id', 'company__short_name', 'company__ticker', 'company__country__short_name',
-                       'currency__short_name', 'invested_amount']  # /stocks_in_portfolio/?ordering=-invested_amount
+    filter_fields = ['company_id', 'company__short_name', 'company__full_name', 'company__ticker',
+                     'currency__short_name', 'invested_amount']
+    # /stocks_in_portfolio/?company__ticker=RASP
+    search_fields = ['company__short_name', 'company__full_name', 'company__ticker', 'currency__short_name']
+    # /stocks_in_portfolio/?search=Расп
+    ordering_fields = ['company_id', 'company__short_name', 'company__ticker', 'currency__short_name',
+                       'invested_amount']
+    # /stocks_in_portfolio/?ordering=-invested_amount
 
     def get_queryset(self):
         return StocksInPortfolio.objects.filter(portfolio_id=self.kwargs['id_portfolio'])
 
     def perform_create(self, serializer):
-        serializer.save(portfolio_id=self.kwargs['id_portfolio'])
+        serializer.save(portfolio_id=int(self.kwargs['id_portfolio']))
 
     def perform_update(self, serializer):
-        serializer.save(portfolio_id=self.kwargs['id_portfolio'])
+        serializer.save(portfolio_id=int(self.kwargs['id_portfolio']))
 
     def list(self, request, *args, **kwargs):
         """ вывод списка компании в конкретном портфеле """
-        queryset = StocksInPortfolio.objects \
-            .filter(portfolio_id=self.kwargs['id_portfolio']) \
-            .values('company_id', 'company__short_name', 'company__ticker', 'company__country__short_name',
-                    'stocks_count', 'buy_price', 'invested_amount', 'currency__short_name')
+        queryset = StocksInPortfolio.objects.filter(portfolio_id=self.kwargs['id_portfolio'])\
+                                            .select_related('company', 'currency')
+        # queryset = StocksInPortfolio.objects \
+        #     .filter(portfolio_id=self.kwargs['id_portfolio']) \
+        #     .values('company_id', 'company__short_name', 'company__ticker', 'company__country__short_name',
+        #             'stocks_count', 'buy_price', 'invested_amount', 'currency__short_name')
         queryset = self.filter_queryset(queryset)
         serializer = StocksInPortfolioListSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         """ вывод информации о конкретной компании в конкретном портфеле """
-        queryset = StocksInPortfolio.objects \
-            .filter(portfolio_id=self.kwargs['id_portfolio']) \
-            .values('company_id', 'company__short_name', 'company__ticker', 'company__country__short_name',
-                    'stocks_count', 'buy_price', 'invested_amount', 'currency__short_name')
+        queryset = StocksInPortfolio.objects.filter(portfolio_id=self.kwargs['id_portfolio']) \
+            .select_related('company', 'currency')
+        # queryset = StocksInPortfolio.objects \
+        #     .filter(portfolio_id=self.kwargs['id_portfolio']) \
+        #     .values('company_id', 'company__short_name', 'company__ticker', 'company__country__short_name',
+        #             'stocks_count', 'buy_price', 'invested_amount', 'currency__short_name')
         company = get_object_or_404(queryset, pk=self.kwargs['pk'])
         serializer = StocksInPortfolioListSerializer(company, many=False)
         return Response(serializer.data)
@@ -112,7 +118,8 @@ class CompanyView(ModelViewSet):
     filter_fields = ['id', 'short_name', 'ticker', 'industry__name', 'company_fund__report_date',
                      'company_fund__public_date', 'full_name', 'website', 'country__short_name', 'country__full_name']
     # /companies/?short_name=ММК
-    search_fields = ['short_name', 'ticker', 'industry__name', 'full_name', 'country__short_name', 'country__full_name']
+    search_fields = ['short_name', 'ticker', 'industry__name', 'full_name', 'website', 'country__short_name',
+                     'country__full_name']
     # /companies/?search=ит
     ordering_fields = ['id', 'short_name', 'ticker', 'industry__name', 'company_fund__report_date',
                        'company_fund__public_date', 'full_name', 'website', 'country__short_name', 'country__full_name',
@@ -123,12 +130,12 @@ class CompanyView(ModelViewSet):
         """ вывод списка компаний """
         queryset = Company.objects.prefetch_related(Prefetch('company_fund', queryset=Fundamentals.objects
                                                              .filter(is_actual=True)
-                                                             .select_related('measure', 'currency')
-                                                             , to_attr='actual_fund'),
+                                                             .select_related('measure', 'currency'),
+                                                             to_attr='actual_fund'),
                                                     Prefetch('stock_price', queryset=StockPrice.objects
                                                              .filter(is_actual=True)
-                                                             .select_related('currency')
-                                                             , to_attr='actual_stock_price'))\
+                                                             .select_related('currency'),
+                                                             to_attr='actual_stock_price'))\
                                   .select_related('country', 'industry')
         queryset = self.filter_queryset(queryset)
         serializer = CompanyListSerializer(queryset, many=True)
@@ -138,12 +145,12 @@ class CompanyView(ModelViewSet):
         """ вывод информации о конкретной компании"""
         queryset = Company.objects.prefetch_related(Prefetch('company_fund', queryset=Fundamentals.objects
                                                              .filter(is_actual=True)
-                                                             .select_related('measure', 'currency')
-                                                             , to_attr='actual_fund'),
+                                                             .select_related('measure', 'currency'),
+                                                             to_attr='actual_fund'),
                                                     Prefetch('stock_price', queryset=StockPrice.objects
                                                              .filter(is_actual=True)
-                                                             .select_related('currency')
-                                                             , to_attr='actual_stock_price')) \
+                                                             .select_related('currency'),
+                                                             to_attr='actual_stock_price')) \
                                   .select_related('country', 'industry')
         company = get_object_or_404(queryset, pk=self.kwargs['pk'])
         serializer = CompanyListSerializer(company, many=False)
@@ -169,13 +176,13 @@ class FundamentalsView(ModelViewSet):
     # /fundamentals/?ordering=-is_actual
 
     def get_queryset(self):
-        return Fundamentals.objects.filter(company_id=self.kwargs['id_company']).select_related('measure', 'currency')
+        return Fundamentals.objects.filter(company_id=self.kwargs['id_company'])
 
     def perform_create(self, serializer):
-        serializer.save(company_id=self.kwargs['id_company'])
+        serializer.save(company_id=int(self.kwargs['id_company']))
 
     def perform_update(self, serializer):
-        serializer.save(company_id=self.kwargs['id_company'])
+        serializer.save(company_id=int(self.kwargs['id_company']))
 
     def list(self, request, *args, **kwargs):
         """ вывод списка фундаментальных показателей конкретной компании """
